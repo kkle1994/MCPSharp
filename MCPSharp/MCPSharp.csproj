@@ -7,9 +7,9 @@
     <Nullable>disable</Nullable>
 	  
     <!-- Package Metadata -->
-    <PackageId>MCPSharp</PackageId>
-    <Version>0.9.13</Version>
-    <Authors>Allen Frise</Authors>
+    <PackageId>MCPSharp.GongYihang</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Allen Frise (fixed by Gong Yihang)</Authors>
     <Company></Company>
     <Title>MCPSharp - Model Context Protocol for .NET</Title>
     <Description>Build Model Context Protocol (MCP) servers and clients in .NET with MCPSharp. 
@@ -36,8 +36,8 @@ await client.CallToolAsync("echo", new Dictionary&lt;string, object&gt;{{"input"
     <!-- Package Tags -->
     <PackageTags>mcp;sharp;mcpsharp;mcp-sharp;mcp#;ai;machine-learning;json-rpc;api;tools;claude;anthropic;model-context-protocol;tool-calling;model;context;protocol;server;mcp-server;modelcontextprotocol;mcpserver;standard;</PackageTags>
     <!-- Repository Info -->
-    <RepositoryUrl>https://github.com/afrise/MCPSharp</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl></RepositoryUrl>
+    <RepositoryType></RepositoryType>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageProjectUrl>https://github.com/afrise/MCPSharp</PackageProjectUrl>
@@ -48,8 +48,8 @@ await client.CallToolAsync("echo", new Dictionary&lt;string, object&gt;{{"input"
 * Tool Change Notifications: Server now notifies clients when tools are added, updated, or removed
 * Complex Object Parameter Support: Better handling of complex objects in tool parameters
 * Better Error Handling: Improved error handling with detailed stack traces</PackageReleaseNotes>
-    <AssemblyVersion>0.9.13</AssemblyVersion>
-    <FileVersion>0.9.13</FileVersion>
+    <AssemblyVersion>0.0.1</AssemblyVersion>
+    <FileVersion>0.0.1</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>

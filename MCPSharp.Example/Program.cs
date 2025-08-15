@@ -6,11 +6,12 @@ using MCPSharp.Model.Schemas;
 MCPServer.Register<ExternalTool>(); 
 MCPServer.Register<SemKerExample>();
 
-MCPServer.AddToolHandler( new Tool() 
+MCPServer.AddToolHandler(new Tool()
 {
     Name = "dynamicTool",
     Description = "A Test Tool",
-    InputSchema = new InputSchema {
+    InputSchema = new InputSchema
+    {
         Type = "object",
         Required = ["input"],
         Properties = new Dictionary<string, ParameterSchema>{

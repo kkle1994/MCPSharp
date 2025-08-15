@@ -11,6 +11,6 @@ namespace MCPSharp.Model.Results
         /// the prompts
         /// </summary>
         [JsonProperty("prompts")]
-        public List<string> Prompts = [];
+        public List<string> Prompts { get; set; } = [];
     }
 }

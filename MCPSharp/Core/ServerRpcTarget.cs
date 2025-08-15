@@ -22,7 +22,7 @@ namespace MCPSharp
         [JsonRpcMethod("initialize")]
         public async Task<InitializeResult> InitializeAsync(string protocolVersion, object capabilities, Implementation clientInfo)
         {
-            
+
             if (capabilities is ClientCapabilities cc)
             {
                 _clientCapabilities = cc;
@@ -33,13 +33,13 @@ namespace MCPSharp
             if (_clientCapabilities.Tools.TryGetValue("listChanged", out object value))
             {
                 if (value is bool boolValue)
-                    MCPServer.EnableToolChangeNotification = boolValue;    
+                    MCPServer.EnableToolChangeNotification = boolValue;
             }
 
             return await Task.FromResult<InitializeResult>(
-                new(protocolVersion, new ServerCapabilities { 
-                    Tools = new() { { "listChanged", true } } 
-                }, implementation)); 
+                new(protocolVersion, new ServerCapabilities {
+                    Tools = new() { { "listChanged", true } }
+                }, implementation));
         }
 
         /// <summary>
@@ -97,6 +97,9 @@ namespace MCPSharp
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains the list of prompts.</returns>
         [JsonRpcMethod("prompts/list")]
-        public static async Task<PromptListResult> ListPromptsAsync() => await Task.Run(() => new PromptListResult());
+        public static async Task<PromptListResult> ListPromptsAsync() => await Task.Run(() =>
+        {
+            return new PromptListResult();
+        });
     }
 }
