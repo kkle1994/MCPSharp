@@ -3,7 +3,7 @@
     /// <summary>
     /// This is the basic text object for a message
     /// </summary>
-    public class TextContent(string text = null)
+    public class TextContent(string text = null) : IContent
     {
         /// <summary>
         /// The text of the message
@@ -12,7 +12,7 @@
         /// <summary>
         /// The type of the content. This is always "text"
         /// </summary>
-        public string Type { get; } = "text";
+        public string Type { get; set; } = "text";
 
     }
 }

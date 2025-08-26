@@ -1,8 +1,10 @@
-﻿using System.IO.Pipelines;
-using System.Net.Http;
+﻿using MCPSharp.Core.Transport.SSE;
+using System.IO.Pipelines;
 using System.Net;
+using System.Net.Http;
+using System.Reflection.PortableExecutable;
 using System.Text;
-using MCPSharp.Core.Transport.SSE;
+using static Microsoft.VisualStudio.Threading.AsyncReaderWriterLock;
 
 namespace MCPSharp.Core.Transport
 {
@@ -16,7 +18,7 @@ namespace MCPSharp.Core.Transport
         private readonly Stream _baseStream;
         private readonly byte[] _buffer = new byte[4096];
         private readonly List<byte> _readBuffer = new();
-        private static readonly string _logFilePath = Path.Combine(Path.GetTempPath(), "MCPSharp_Reader.log");
+        private static readonly string _logFilePath = Path.Combine(Path.GetTempPath(), "MCPSharp.log");
         private static readonly object _logLock = new object();
 
         public DebugStream(Stream baseStream)
@@ -287,9 +289,13 @@ namespace MCPSharp.Core.Transport
 
     internal class StdioTransportPipe : IDuplexPipe
     {
+#if DEBUG
+        private readonly PipeReader _reader = PipeReader.Create(new DebugStream(Console.OpenStandardInput()));
+        private readonly PipeWriter _writer = PipeWriter.Create(new DebugStream(Console.OpenStandardOutput()));
+#else
         private readonly PipeReader _reader = PipeReader.Create(Console.OpenStandardInput());
         private readonly PipeWriter _writer = PipeWriter.Create(Console.OpenStandardOutput());
-
+#endif
         public PipeReader Input => _reader;
         public PipeWriter Output => _writer;
     }
