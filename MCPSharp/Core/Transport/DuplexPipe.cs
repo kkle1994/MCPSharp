@@ -6,7 +6,7 @@ using MCPSharp.Core.Transport.SSE;
 
 namespace MCPSharp.Core.Transport
 {
-    internal class FilteringStream : Stream
+    internal class DebugStream : Stream
     {
 #if DEBUG
         public static bool IsLogging = true;
@@ -14,13 +14,12 @@ namespace MCPSharp.Core.Transport
         public static bool IsLogging = false;
 #endif
         private readonly Stream _baseStream;
-        private readonly string _filterString = "{\"method\":\"notifications/initialized\",\"jsonrpc\":\"2.0\"}";
         private readonly byte[] _buffer = new byte[4096];
         private readonly List<byte> _readBuffer = new();
         private static readonly string _logFilePath = Path.Combine(Path.GetTempPath(), "MCPSharp_Reader.log");
         private static readonly object _logLock = new object();
 
-        public FilteringStream(Stream baseStream)
+        public DebugStream(Stream baseStream)
         {
             _baseStream = baseStream;
             LogContent($"INIT: FilteringStream created for {baseStream.GetType().Name}");
@@ -78,17 +77,8 @@ namespace MCPSharp.Core.Transport
             string originalContent = Encoding.UTF8.GetString(_readBuffer.ToArray());
             LogContent($"READ: {originalContent}");
 
-            // Filter the content
-            string filteredContent = originalContent.Replace(_filterString, "");
-            
-            // Log if content was filtered
-            if (originalContent != filteredContent)
-            {
-                //LogContent($"FILTERED: Removed '{_filterString}'");
-            }
-
             // Convert back to bytes
-            byte[] filteredBytes = Encoding.UTF8.GetBytes(filteredContent);
+            byte[] filteredBytes = Encoding.UTF8.GetBytes(originalContent);
             _readBuffer.Clear();
 
             // Copy to output buffer
@@ -100,8 +90,6 @@ namespace MCPSharp.Core.Transport
             {
                 _readBuffer.AddRange(filteredBytes.Skip(copyCount));
             }
-
-            //LogContent($"OUTPUT: {Encoding.UTF8.GetString(buffer, offset, copyCount)}");
 
             return copyCount;
         }
@@ -120,11 +108,8 @@ namespace MCPSharp.Core.Transport
             string originalContent = Encoding.UTF8.GetString(_readBuffer.ToArray());
             LogContent($"READ_ASYNC: {originalContent}");
 
-            // Filter the content
-            string filteredContent = originalContent.Replace(_filterString, "");
-
             // Convert back to bytes
-            byte[] filteredBytes = Encoding.UTF8.GetBytes(filteredContent);
+            byte[] filteredBytes = Encoding.UTF8.GetBytes(originalContent);
             _readBuffer.Clear();
 
             // Copy to output buffer
@@ -289,8 +274,8 @@ namespace MCPSharp.Core.Transport
     internal class DuplexPipe(Stream reader, Stream writer) : IDuplexPipe
     {
 #if DEBUG
-        private readonly PipeReader _reader = PipeReader.Create(new FilteringStream(reader));
-        private readonly PipeWriter _writer = PipeWriter.Create(new FilteringStream(writer));
+        private readonly PipeReader _reader = PipeReader.Create(new DebugStream(reader));
+        private readonly PipeWriter _writer = PipeWriter.Create(new DebugStream(writer));
 #else
         private readonly PipeReader _reader = PipeReader.Create(reader);
         private readonly PipeWriter _writer = PipeWriter.Create(writer);
