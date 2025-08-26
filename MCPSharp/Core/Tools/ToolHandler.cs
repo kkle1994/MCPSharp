@@ -53,23 +53,26 @@ namespace MCPSharp.Core.Tools
                     result = resultProperty?.GetValue(task);
                 }
 
+                if(result is CallToolResult callToolResult)
+                    return callToolResult;
+
                 if (result is string resultString)
-                    return new CallToolResult { Content = [new (resultString)]};
+                    return new CallToolResult { Content = [new TextContent(resultString)]};
                 
                 if (result is string[] resultStringArray)
                     return new CallToolResult { Content = [.. resultStringArray.Select(s => new TextContent(s))] };
 
                 if (result is null)
                 {
-                    return new CallToolResult { IsError = true, Content = [new("null")] };
+                    return new CallToolResult { IsError = true, Content = [new TextContent("null")] };
                 }
 
                 if (result is JsonElement jsonElement)
                 {
-                    return new CallToolResult { Content = [new(jsonElement.GetRawText())] };
+                    return new CallToolResult { Content = [new TextContent(jsonElement.GetRawText())] };
                 }   
 
-                else return new CallToolResult { Content = [new(result.ToString())] };
+                else return new CallToolResult { Content = [new TextContent(result.ToString())] };
             }
             catch (Exception ex)
             {

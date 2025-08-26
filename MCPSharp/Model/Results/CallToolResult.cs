@@ -18,6 +18,6 @@ namespace MCPSharp.Model.Results
         /// Gets or sets the content of the result.
         /// </summary>
         [JsonPropertyName("content")]
-        public TextContent[] Content { get; set; }
+        public IEnumerable<object> Content { get; set; }
     }
 }
