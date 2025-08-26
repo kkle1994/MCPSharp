@@ -19,6 +19,9 @@ MCPSharp is a .NET library that helps you build Model Context Protocol (MCP) ser
 - **Tool Change Notifications**: Server now notifies clients when tools are added, updated, or removed
 - **Complex Object Parameter Support**: Better handling of complex objects in tool parameters
 - **Better Error Handling**: Improved error handling with detailed stack traces
+- **Image Content Support**: Full support for handling image content with base64 encoding and MIME types
+- **Debug Streaming and Logging**: Built-in FilteringStream for debugging and logging input/output operations
+- **Enhanced Prompts Support**: Improved prompt list handling and response format fixes
 
 ## When to Use MCPSharp
 
@@ -36,6 +39,9 @@ Use MCPSharp when you want to:
 - Automatic parameter validation and type conversion
 - Rich documentation support through XML comments
 - Near zero configuration required for basic usage
+- **Image Content Processing**: Handle images with base64 encoding and MIME type support
+- **Debug and Logging Capabilities**: FilteringStream for comprehensive input/output logging
+- **Enhanced Media Support**: Support for various content types including images and text
 
 ## Prerequisites
 
@@ -121,6 +127,51 @@ public class MySkillClass
 MCPServer.Register<MySkillClass>();
 ```
 Currently, This is the only way to make a Semantic kernel method registerable with the MCP server. If you have a use case that is not covered here, please reach out!
+
+### Image Content Support
+
+MCPSharp now supports handling image content in your tools:
+
+```csharp
+using MCPSharp.Model.Content;
+using MCPSharp.Model.Results;
+
+public class ImageProcessor
+{
+    [McpTool("process-image", "Process an image and return analysis")]
+    public static ImageListResult ProcessImage(
+        [McpParameter(true, "Base64 encoded image data")] string imageData,
+        [McpParameter(true, "MIME type of the image")] string mimeType)
+    {
+        // Create image content
+        var imageContent = new ImageContent(imageData, mimeType);
+        
+        // Process the image (your logic here)
+        // ...
+        
+        // Return processed images
+        return new ImageListResult(new[] { imageContent });
+    }
+}
+```
+
+### Debug Logging and Filtering
+
+MCPSharp includes a built-in FilteringStream (DebugStream) that logs all input and output operations for debugging purposes:
+
+- **Automatic Logging**: In DEBUG mode, all stream operations are automatically logged
+- **Log File Location**: Logs are saved to a temporary file that can be accessed via `DebugStream.GetLogFilePath()`
+- **Comprehensive Coverage**: Logs all read/write operations, including async operations and byte-level access
+- **Performance Friendly**: Logging can be disabled in release builds
+
+```csharp
+// Enable or disable logging
+DebugStream.IsLogging = true;
+
+// Get the log file path to review debug information
+string logPath = DebugStream.GetLogFilePath();
+Console.WriteLine($"Debug logs are saved to: {logPath}");
+```
 
 
 ## API Reference
