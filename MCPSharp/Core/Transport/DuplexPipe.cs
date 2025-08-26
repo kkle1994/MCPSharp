@@ -288,8 +288,13 @@ namespace MCPSharp.Core.Transport
 
     internal class DuplexPipe(Stream reader, Stream writer) : IDuplexPipe
     {
+#if DEBUG
         private readonly PipeReader _reader = PipeReader.Create(new FilteringStream(reader));
+        private readonly PipeWriter _writer = PipeWriter.Create(new FilteringStream(writer));
+#else
+        private readonly PipeReader _reader = PipeReader.Create(reader);
         private readonly PipeWriter _writer = PipeWriter.Create(writer);
+#endif
 
         public PipeReader Input => _reader;
         public PipeWriter Output => _writer;
@@ -297,7 +302,7 @@ namespace MCPSharp.Core.Transport
 
     internal class StdioTransportPipe : IDuplexPipe
     {
-        private readonly PipeReader _reader = PipeReader.Create(new FilteringStream(Console.OpenStandardInput()));
+        private readonly PipeReader _reader = PipeReader.Create(Console.OpenStandardInput());
         private readonly PipeWriter _writer = PipeWriter.Create(Console.OpenStandardOutput());
 
         public PipeReader Input => _reader;
@@ -311,7 +316,7 @@ namespace MCPSharp.Core.Transport
         public SSETransportPipe(Uri address)
         {
             _address = address;
-            _reader = PipeReader.Create(new FilteringStream(_httpClient.GetStreamAsync(_address).Result));
+            _reader = PipeReader.Create(_httpClient.GetStreamAsync(_address).Result);
             _writer = PipeWriter.Create(new HttpPostStream(_address.ToString()));
         }
 
