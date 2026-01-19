@@ -1,4 +1,5 @@
-﻿using MCPSharp.Core.Tools;
+using MCPSharp.Core.Prompts;
+using MCPSharp.Core.Tools;
 using MCPSharp.Core.Transport;
 using MCPSharp.Model;
 using Microsoft.VisualStudio.Threading;
@@ -24,6 +25,12 @@ namespace MCPSharp
 
         private readonly ResourceManager _resouceManager = new();
 
+        private readonly PromptManager _promptManager = new()
+        {
+            PromptChangeNotification = () => { if (EnablePromptChangeNotification) 
+                    _= _instance._rpc.InvokeWithParameterObjectAsync("notifications/prompts/list_changed", null);}
+        };
+
         private readonly ServerRpcTarget _target;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -31,6 +38,11 @@ namespace MCPSharp
         /// true if tool change notifications are enabled. This will set to true if the client supports it during initialization, but can be disabled.
         /// </summary>
         public static bool EnableToolChangeNotification { get; set; } = false;
+
+        /// <summary>
+        /// true if prompt change notifications are enabled.
+        /// </summary>
+        public static bool EnablePromptChangeNotification { get; set; } = false;
 
         /// <summary>
         /// Enables periodic pings to the client. If the client does not respond, the server will exit. Default is true, as clients are supposed to respond to pings.
@@ -53,7 +65,7 @@ namespace MCPSharp
         private MCPServer()
         {
             Implementation = new();
-            _target = new(_toolManager, _resouceManager, Implementation); 
+            _target = new(_toolManager, _resouceManager, _promptManager, Implementation); 
             Console.SetOut(RedirectedOutput);
             _rpc = new JsonRpc(new NewLineDelimitedMessageHandler(new StdioTransportPipe(), 
                 new SystemTextJsonFormatter() { 
@@ -73,11 +85,25 @@ namespace MCPSharp
         public static void RegisterTool<T>() where T : class, new() => _instance._toolManager.Register<T>();
 
         /// <summary>
-        /// Registers a tool with the server.
+        /// Registers a class containing tools, resources, and/or prompts with the server.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type to register.</typeparam>
         public static void Register<T>() where T : class, new()=>_ = _instance.RegisterAsync<T>();
-        public async Task RegisterAsync<T>() where T : class, new() { _toolManager.Register<T>(); _resouceManager.Register<T>(); }
+        
+        /// <summary>
+        /// Registers a class containing tools, resources, and/or prompts with the server asynchronously.
+        /// </summary>
+        /// <typeparam name="T">The type to register.</typeparam>
+        public async Task RegisterAsync<T>() where T : class, new() 
+        { 
+            _toolManager.Register<T>(); 
+            _resouceManager.Register<T>(); 
+            _promptManager.Register<T>();
+        }
+        
+        /// <summary>
+        /// Adds a tool handler directly.
+        /// </summary>
         public static void AddToolHandler(Tool tool, Delegate func) => _instance._toolManager.AddToolHandler(new ToolHandler(tool, func.Method));
 
         /// <summary>
@@ -87,7 +113,7 @@ namespace MCPSharp
         public static void SetOutput(TextWriter output) => Console.SetOut(output);
 
         /// <summary>
-        /// Starts the MCP Server, registers all tools, and starts listening for requests.
+        /// Starts the MCP Server, registers all tools, prompts, and resources, and starts listening for requests.
         /// </summary>
         /// <param name="serverName">The name of the server.</param>
         /// <param name="version">The version of the server.</param>
@@ -103,8 +129,9 @@ namespace MCPSharp
                     bool methodHasToolAttribute = t.GetMethods().Any(m => m.GetCustomAttribute<McpToolAttribute>() != null);
                     bool methodHasFunctionAttribute = t.GetMethods().Any(m => m.GetCustomAttribute<McpFunctionAttribute>() != null);
                     bool methodHasResourceAttribute = t.GetMethods().Any(m => m.GetCustomAttribute<McpResourceAttribute>() != null);
+                    bool methodHasPromptAttribute = t.GetMethods().Any(m => m.GetCustomAttribute<McpPromptAttribute>() != null);
 
-                    return classHasToolAttribute || methodHasToolAttribute || methodHasFunctionAttribute || methodHasResourceAttribute;
+                    return classHasToolAttribute || methodHasToolAttribute || methodHasFunctionAttribute || methodHasResourceAttribute || methodHasPromptAttribute;
                 });
 
             foreach (var toolType in allTypes)
