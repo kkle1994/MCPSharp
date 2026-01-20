@@ -56,6 +56,14 @@ namespace MCPSharp.Core.Tools
                 if(result is CallToolResult callToolResult)
                     return callToolResult;
 
+                // Support for single IContent return
+                if (result is IContent singleContent)
+                    return new CallToolResult { Content = [singleContent] };
+
+                // Support for IEnumerable<IContent> return
+                if (result is IEnumerable<IContent> contentEnumerable)
+                    return new CallToolResult { Content = contentEnumerable };
+
                 if (result is string resultString)
                     return new CallToolResult { Content = [new TextContent(resultString)]};
                 

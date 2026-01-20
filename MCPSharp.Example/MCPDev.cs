@@ -168,7 +168,7 @@ namespace MCPSharp.Example
                         hash = SHA512.HashData(bytes);
                         break;
                     default:
-                        return $"{{\"error\": \"Unsupported algorithm: {algorithm}\"}";
+                        return $"{{\"error\": \"Unsupported algorithm: {algorithm}\"}}";
                 }
 
                 return Convert.ToHexString(hash).ToLowerInvariant();
@@ -216,7 +216,7 @@ namespace MCPSharp.Example
                             results.Add(random.NextDouble() > 0.5);
                             break;
                         default:
-                            return $"{{\"error\": \"Unsupported data type: {dataType}\"}";
+                            return $"{{\"error\": \"Unsupported data type: {dataType}\"}}";
                     }
                 }
 

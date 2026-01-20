@@ -1,4 +1,5 @@
-﻿using MCPSharp.Core.Tools;
+using MCPSharp.Core.Prompts;
+using MCPSharp.Core.Tools;
 using MCPSharp.Model;
 using MCPSharp.Model.Capabilities;
 using MCPSharp.Model.Parameters;
@@ -7,7 +8,7 @@ using StreamJsonRpc;
 
 namespace MCPSharp
 {
-    class ServerRpcTarget(ToolManager toolManager, ResourceManager resourceManager, Implementation implementation)
+    class ServerRpcTarget(ToolManager toolManager, ResourceManager resourceManager, PromptManager promptManager, Implementation implementation)
     {
         private Implementation _clientInfo;
         private ClientCapabilities _clientCapabilities = new();
@@ -38,7 +39,8 @@ namespace MCPSharp
 
             return await Task.FromResult<InitializeResult>(
                 new(protocolVersion, new ServerCapabilities {
-                    Tools = new() { { "listChanged", true } }
+                    Tools = new() { { "listChanged", true } },
+                    Prompts = new() { { "listChanged", true } }
                 }, implementation));
         }
 
@@ -97,9 +99,46 @@ namespace MCPSharp
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains the list of prompts.</returns>
         [JsonRpcMethod("prompts/list")]
-        public static async Task<PromptListResult> ListPromptsAsync() => await Task.Run(() =>
+        public async Task<PromptListResult> ListPromptsAsync(object parameters = null)
         {
-            return new PromptListResult();
-        });
+            _ = parameters;
+            return await Task.FromResult(new PromptListResult 
+            { 
+                Prompts = promptManager.GetAllPrompts() 
+            });
+        }
+
+        /// <summary>
+        /// Gets a specific prompt by name with optional arguments.
+        /// </summary>
+        /// <param name="parameters">The parameters containing the prompt name and optional arguments.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the prompt messages.</returns>
+        [JsonRpcMethod("prompts/get", UseSingleObjectParameterDeserialization = true)]
+        public async Task<PromptGetResult> GetPromptAsync(PromptGetParameters parameters)
+        {
+            var handler = promptManager.GetHandler(parameters.Name);
+            
+            if (handler == null)
+            {
+                return new PromptGetResult
+                {
+                    Description = $"Prompt '{parameters.Name}' not found",
+                    Messages = new List<PromptMessage>
+                    {
+                        new PromptMessage
+                        {
+                            Role = "user",
+                            Content = new PromptContent
+                            {
+                                Type = "text",
+                                Text = $"Error: Prompt '{parameters.Name}' not found"
+                            }
+                        }
+                    }
+                };
+            }
+
+            return await handler.HandleAsync(parameters.Arguments);
+        }
     }
 }

@@ -19,7 +19,11 @@ MCPSharp is a .NET library that helps you build Model Context Protocol (MCP) ser
 - **Tool Change Notifications**: Server now notifies clients when tools are added, updated, or removed
 - **Complex Object Parameter Support**: Better handling of complex objects in tool parameters
 - **Better Error Handling**: Improved error handling with detailed stack traces
-- **Image Content Support**: Full support for handling image content with base64 encoding and MIME types
+- **Full Multimedia Content Support**: Complete support for text, image, audio, video, and embedded resources
+- **Audio Content Support**: Handle audio data with base64 encoding and MIME types (audio/mpeg, audio/wav, etc.)
+- **Video Content Support**: Handle video data with base64 encoding and MIME types (video/mp4, video/webm, etc.)
+- **Embedded Resource Support**: Return file references with URI, text/blob content, and MIME types
+- **MixedContentResult with Builder Pattern**: Return multiple content types in a single response using fluent API
 - **Debug Streaming and Logging**: Built-in FilteringStream for debugging and logging input/output operations
 - **Enhanced Prompts Support**: Improved prompt list handling and response format fixes
 
@@ -39,9 +43,10 @@ Use MCPSharp when you want to:
 - Automatic parameter validation and type conversion
 - Rich documentation support through XML comments
 - Near zero configuration required for basic usage
-- **Image Content Processing**: Handle images with base64 encoding and MIME type support
+- **Multiple Content Types**: Text, Image, Audio, Video, and Embedded Resources
+- **Rich Result Types**: ImageListResult, AudioListResult, VideoListResult, ResourceListResult, MixedContentResult
+- **Mixed Content Results**: Fluent builder API for combining multiple content types in a single response
 - **Debug and Logging Capabilities**: FilteringStream for comprehensive input/output logging
-- **Enhanced Media Support**: Support for various content types including images and text
 
 ## Prerequisites
 
@@ -128,32 +133,117 @@ MCPServer.Register<MySkillClass>();
 ```
 Currently, This is the only way to make a Semantic kernel method registerable with the MCP server. If you have a use case that is not covered here, please reach out!
 
-### Image Content Support
+### Multimedia Content Support
 
-MCPSharp now supports handling image content in your tools:
+MCPSharp supports a full range of content types for rich tool responses:
+
+#### Image Content
 
 ```csharp
 using MCPSharp.Model.Content;
 using MCPSharp.Model.Results;
 
-public class ImageProcessor
+public class ImageTools
 {
-    [McpTool("process-image", "Process an image and return analysis")]
+    [McpTool("process-image", "Process an image and return result")]
     public static ImageListResult ProcessImage(
         [McpParameter(true, "Base64 encoded image data")] string imageData,
-        [McpParameter(true, "MIME type of the image")] string mimeType)
+        [McpParameter(true, "MIME type (image/png, image/jpeg, etc.)")] string mimeType)
     {
-        // Create image content
         var imageContent = new ImageContent(imageData, mimeType);
-        
-        // Process the image (your logic here)
-        // ...
-        
-        // Return processed images
         return new ImageListResult(new[] { imageContent });
     }
 }
 ```
+
+#### Audio Content
+
+```csharp
+public class AudioTools
+{
+    [McpTool("process-audio", "Process audio and return result")]
+    public static AudioListResult ProcessAudio(
+        [McpParameter(true, "Base64 encoded audio data")] string audioData,
+        [McpParameter(true, "MIME type (audio/mpeg, audio/wav, audio/ogg)")] string mimeType)
+    {
+        var audioContent = new AudioContent(audioData, mimeType);
+        return new AudioListResult(new[] { audioContent });
+    }
+}
+```
+
+#### Video Content
+
+```csharp
+public class VideoTools
+{
+    [McpTool("process-video", "Process video and return result")]
+    public static VideoListResult ProcessVideo(
+        [McpParameter(true, "Base64 encoded video data")] string videoData,
+        [McpParameter(true, "MIME type (video/mp4, video/webm, video/ogg)")] string mimeType)
+    {
+        var videoContent = new VideoContent(videoData, mimeType);
+        return new VideoListResult(new[] { videoContent });
+    }
+}
+```
+
+#### Embedded Resources
+
+Return file references with URI and content:
+
+```csharp
+public class ResourceTools
+{
+    [McpTool("get-document", "Get a document as embedded resource")]
+    public static ResourceListResult GetDocument()
+    {
+        // Text resource
+        var textResource = EmbeddedResource.FromText(
+            "file:///documents/report.txt", 
+            "Report content here", 
+            "text/plain");
+        
+        // Binary resource (base64)
+        var binaryResource = EmbeddedResource.FromBlob(
+            "file:///documents/data.bin",
+            Convert.ToBase64String(binaryData),
+            "application/octet-stream");
+        
+        return new ResourceListResult(new[] { textResource, binaryResource });
+    }
+}
+```
+
+#### Mixed Content (Builder Pattern)
+
+Return multiple content types in a single response using the fluent builder API:
+
+```csharp
+public class RichResponseTools
+{
+    [McpTool("analyze-data", "Analyze data and return rich response")]
+    public static MixedContentResult AnalyzeData(string input)
+    {
+        return MixedContentResult.Builder()
+            .AddText("Analysis Results:")
+            .AddText($"Processed input: {input}")
+            .AddImage(chartImageBase64, "image/png")
+            .AddTextResource("file:///reports/analysis.json", jsonReport, "application/json")
+            .Build();
+    }
+    
+    // Or use constructor directly
+    [McpTool("multi-response", "Return multiple content items")]
+    public static MixedContentResult MultiResponse()
+    {
+        return new MixedContentResult(
+            new TextContent("Hello"),
+            new ImageContent(imageData, "image/png"),
+            new AudioContent(audioData, "audio/mpeg")
+        );
+    }
+}
 
 ### Debug Logging and Filtering
 
@@ -194,6 +284,33 @@ Console.WriteLine($"Debug logs are saved to: {logPath}");
         - `Uri` - Resource URI (can include templates)
         - `MimeType` - MIME type of the resource
         - `Description` - Resource description
+
+### Content Types
+
+All content types are in the `MCPSharp.Model.Content` namespace:
+
+| Type | Properties | Description |
+|------|------------|-------------|
+| `TextContent` | `Text`, `Type="text"` | Plain text content |
+| `ImageContent` | `Data` (base64), `MimeType`, `Type="image"` | Image with base64 data |
+| `AudioContent` | `Data` (base64), `MimeType`, `Type="audio"` | Audio with base64 data |
+| `VideoContent` | `Data` (base64), `MimeType`, `Type="video"` | Video with base64 data |
+| `EmbeddedResource` | `Resource` (ResourceContents), `Type="resource"` | File reference with URI |
+| `ResourceContents` | `Uri`, `Text`/`Blob`, `MimeType` | Resource data container |
+
+### Result Types
+
+All result types are in the `MCPSharp.Model.Results` namespace:
+
+| Type | Description |
+|------|-------------|
+| `CallToolResult` | Base result type with `Content` and `IsError` |
+| `ImageListResult` | Returns list of `ImageContent` |
+| `AudioListResult` | Returns list of `AudioContent` |
+| `VideoListResult` | Returns list of `VideoContent` |
+| `ResourceListResult` | Returns list of `EmbeddedResource` |
+| `MixedContentResult` | Returns mixed content types (use `.Builder()` for fluent API) |
+| `CallToolErrorResult` | Returns error with message |
 
 ### Server Methods
 

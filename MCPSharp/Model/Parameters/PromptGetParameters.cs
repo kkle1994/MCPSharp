@@ -2,26 +2,27 @@
 
 using System.Text.Json.Serialization;
 
-namespace MCPSharp.Model.Results
+namespace MCPSharp.Model.Parameters
 {
     /// <summary>
-    /// Result of the prompts/list method.
+    /// Parameters for the prompts/get method.
     /// </summary>
-    public class PromptListResult
+    public class PromptGetParameters
     {
         /// <summary>
-        /// The list of available prompts.
+        /// The name of the prompt to retrieve.
         /// </summary>
-        [JsonPropertyName("prompts")]
-        public List<Prompt> Prompts { get; set; } = new();
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Optional cursor for pagination.
+        /// Optional arguments to pass to the prompt.
         /// </summary>
-        [JsonPropertyName("nextCursor")]
+        [JsonPropertyName("arguments")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? NextCursor { get; set; }
+        public Dictionary<string, object>? Arguments { get; set; }
     }
 }
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
